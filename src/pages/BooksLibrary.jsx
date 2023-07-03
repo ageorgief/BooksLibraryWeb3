@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { useSigner } from 'wagmi';
 import booksLibraryAbi from '../abi/BooksLibrary.json';
@@ -73,7 +73,7 @@ const BooksLibrary = () => {
     try {
       const { author, title, copies } = addBookFormData;
 
-      const tx = await contract.addBook([author, title, copies]);
+      const tx = await contract.addBook(author, title, copies);
       await tx.wait();
 
       setAddBookFormData(initialAddBookFormData);
@@ -90,14 +90,13 @@ const BooksLibrary = () => {
     setFormSubmitError('');
 
     try {
-      const { author, title, copies } = rentBookFormData;
+      const { bookId } = rentBookFormData;
 
-      const tx = await contract.borrowBook(author, title, copies);
+      const tx = await contract.borrowBook(bookId);
       await tx.wait();
 
       setRentBookFormData(initialRentBookFormData);
 
-      
     } catch (e) {
       setFormSubmitError(e.reason);
     } finally {
@@ -110,9 +109,9 @@ const BooksLibrary = () => {
     setFormSubmitError('');
 
     try {
-      const  { boookId } = returnBookFormData;
+      const { bookId } = returnBookFormData;
 
-      const tx = await contract.returnBOok(boookId);
+      const tx = await contract.returnBook(bookId);
       await tx.wait();
 
       setReturnBookFormData(initialReturnBookFormData);
@@ -127,9 +126,8 @@ const BooksLibrary = () => {
   const handleShowAvailableBooks = async () => {
     setIsLoadingShowBook(true);
     setFormSubmitError('');
-    
+
     try {
-    
       const books = await contract.getAllAvailableBooks();
       setAvailableBooks(books);
 
@@ -140,6 +138,7 @@ const BooksLibrary = () => {
     }
   };
 
+
   // Use effects
   useEffect(() => {
     if (signer) {
@@ -149,133 +148,150 @@ const BooksLibrary = () => {
     }
   }, [signer]);
 
-
+  useEffect(() => {
+    if (formSubmitError) {
+      setFormSubmitError(formSubmitError);
+    } else {
+      setFormSubmitError('');
+    }
+  }, [formSubmitError]);
 
   return (
     <div className="container my-5 my-lg-10">
       <div className="row">
         <div className="col-6 offset-3">
           <h2 className="heading-medium text-center mb-5">Books Library</h2>
-            <>
+          <>
+            <div className="card mt-5">
+              <div className="card-body">
+                <div className="form-group">
+                  <p className="text-small text-bold">Author:</p>
+                  <input
+                    type="text"
+                    className="form-control form-input-half"
+                    name="author"
+                    value={addBookFormData.author}
+                    onChange={handleAddBookFormInputChange}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <p className="text-small text-bold">Title:</p>
+                  <input
+                    type="text"
+                    className="form-control form-input-half"
+                    name="title"
+                    value={addBookFormData.title}
+                    onChange={handleAddBookFormInputChange}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <p className="text-small text-bold">Number of copies:</p>
+                  <input
+                    type="text"
+                    className="form-control form-input-half"
+                    name="copies"
+                    value={addBookFormData.copies}
+                    onChange={handleAddBookFormInputChange}
+                  />
+                </div>
+
+                <div className="mt-4 d-flex justify-content-end">
+                  <Button
+                    onClick={handleAddBookButtonClick}
+                    loading={isLoadingAddBook}
+                    type="primary"
+                  >
+                    Add Book
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <div className="card mt-5">
+              <div className="card-body">
+                <div className="form-group">
+                  <p className="text-small text-bold">Book ID:</p>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="bookId"
+                    value={rentBookFormData.bookId}
+                    onChange={handleRentBookFormInputChange}
+                  />
+                </div>
+
+                <div className="mt-4 d-flex justify-content-end">
+                  <Button
+                    onClick={handleRentBookButtonClick}
+                    loading={isLoadingRentBook}
+                    type="primary"
+                  >
+                    Rent book
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <div className="card mt-5">
+              <div className="card-body">
+                <div className="form-group">
+                  <p className="text-small text-bold">Book ID:</p>
+                  <input
+                    type="text"
+                    className="form-control form-input-half"
+                    name="bookId"
+                    value={returnBookFormData.bookId}
+                    onChange={handleReturnBookFormInputChange}
+                  />
+                </div>
+
+                <div className="mt-4 d-flex justify-content-end">
+                  <Button
+                    onClick={handleReturnBookButtonClick}
+                    loading={isLoadingReturnBook}
+                    type="primary"
+                  >
+                    Return book
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <Button
+                onClick={handleShowAvailableBooks}
+                loading={isLoadingShowBook}
+                type="primary"
+              >
+                Show available books
+              </Button>
+            </div>
+            {availableBooks.length > 0 && (
               <div className="card mt-5">
                 <div className="card-body">
-                  <div className="form-group">
-                    <p className="text-small text-bold">Author:</p>
-                    <input
-                      type="text"
-                      className="form-control form-input-half"
-                      name="author"
-                      value={addBookFormData.author}
-                      onChange={handleAddBookFormInputChange}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <p className="text-small text-bold">Title:</p>
-                    <input
-                      type="text"
-                      className="form-control form-input-half"
-                      name="title"
-                      value={addBookFormData.title}
-                        onChange={handleAddBookFormInputChange}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <p className="text-small text-bold">Number of copies:</p>
-                    <input
-                      type="text"
-                      className="form-control form-input-half"
-                      name="copies"
-                      value={addBookFormData.copies}
-                        onChange={handleAddBookFormInputChange}
-                    />
-                  </div>
-
-                  <div className="mt-4 d-flex justify-content-end">
-                    <Button
-                      onClick={handleAddBookButtonClick}
-                      loading={isLoadingAddBook}
-                      type="primary"
-                    >
-                      Add Book
-                    </Button>
-                  </div>
+                  <h4 className="mb-3">Available Books</h4>
+                  <ul>
+                    {availableBooks.map((book, index) => (
+                      <li key={index}>{book}</li>
+                    ))}
+                  </ul>
                 </div>
               </div>
-              <div className="card mt-5">
-                <div className="card-body">
-                  <div className="form-group">
-                    <p className="text-small text-bold">Book ID:</p>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="bookId"
-                      value={rentBookFormData.bookId}
-                      onChange={handleRentBookFormInputChange}
-                    />
-                  </div>
+            )}
+          </>
 
-                  <div className="mt-4 d-flex justify-content-end">
-                    <Button
-                      onClick={handleRentBookButtonClick}
-                      loading={isLoadingRentBook}
-                      type="primary"
-                    >
-                      Rent book
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <div className="card mt-5">
-                <div className="card-body">
-                  <div className="form-group">
-                    <p className="text-small text-bold">Book ID:</p>
-                    <input
-                      type="text"
-                      className="form-control form-input-half"
-                      name="bookId"
-                      value={returnBookFormData.bookId}
-                        onChange={handleReturnBookFormInputChange}
-                    />
-                  </div>
-
-                  <div className="mt-4 d-flex justify-content-end">
-                    <Button
-                      onClick={handleReturnBookButtonClick}
-                      loading={isLoadingReturnBook}
-                      type="primary"
-                    >
-                      Return book
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mt-5">
-                <Button 
-                  onClick={handleShowAvailableBooks} 
-                  loading={isLoadingShowBook}
-                  type="primary"
-                >
-                  Show available books
-                </Button>
-              </div>
-              {availableBooks.length > 0 && (
-                <div className="card mt-5">
-                  <div className="card-body">
-                    <h4 className="mb-3">Available Books</h4>
-                    <ul>
-                      {availableBooks.map((book, index) => (
-                        <li key={index}>{book}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              )}
-            </>
         </div>
       </div>
+      {formSubmitError && (
+        <div className="error-popup">
+          <div className="error-popup-content">
+            <div className="error-popup-message">{formSubmitError}</div>
+            <button className="error-popup-close" onClick={() => setFormSubmitError('')}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

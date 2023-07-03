@@ -24,3 +24,32 @@
   background-color: $light;
   padding: 24px;
 }
+
+.error-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 9999;
+}
+
+.error-popup-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.error-popup-message {
+  margin-bottom: 10px;
+  color: red;
+}
+
+.error-popup-close {
+  background-color: transparent;
+  border: none;
+  color: #333;
+  cursor: pointer;
+}
